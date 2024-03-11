@@ -1,0 +1,43 @@
+name: Webdriver.io Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      appium:
+        image: appium/appium
+        ports:
+          - 4723:4723
+        options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start emulator
+        run: |
+          echo no | android create avd --force -n test -t android-30 --abi google_apis/x86_64
+          emulator -avd test -no-skin -no-audio -no-window &
+
+      - name: Wait for emulator to start
+        run: adb wait-for-device
+
+      - name: Run Webdriver.io Tests on Android emulator
+        run: npm run wdioAndroid
+
+      - name: Shutdown emulator
+        run: adb emu kill
