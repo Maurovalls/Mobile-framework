@@ -1,4 +1,4 @@
-name: Webdriver.io Tests
+name: Run Android Tests
 
 on:
   push:
@@ -6,15 +6,17 @@ on:
       - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     services:
-      appium:
-        image: appium/appium
+      emulator:
+        image: budtmo/docker-android-x86-11.0
         ports:
-          - 4723:4723
+          - 6080:6080
         options: --privileged
+        env:
+          DEVICE: "Pixel 4 API 30(R)"
 
     steps:
       - name: Checkout code
@@ -28,15 +30,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Start emulator
-        run: |
-          echo no | android create avd --force -n test -t android-30 --abi google_apis/x86_64
-          emulator -avd test -no-skin -no-audio -no-window &
+      - name: Start Android emulator
+        run: emulator-headless
 
       - name: Wait for emulator to start
         run: adb wait-for-device
 
-      - name: Run Webdriver.io Tests on Android emulator
+      - name: Run tests
         run: npm run wdioAndroid
 
       - name: Shutdown emulator
